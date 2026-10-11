@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { getPaletteSync, type Color } from "colorthief";
 import {
   Sparkles,
@@ -36,163 +36,159 @@ function isDakColor(hex: string): boolean {
 }
 
 export default function App() {
-  const { data, loading } = useApod();
+  const { data, loading, error, currentIndex, totalItems, nextApod, prevApod } =
+    useApod();
+
+  const [colorCount, setColorCount] = useState<number>(5);
   const [colors, setColors] = useState<string[]>([]);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"tailwind" | "hex" | "rgb">(
+    "tailwind",
+  );
+
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const extractColors = () => {
-    if (imgRef.current) {
+  const extractColors = (count = colorCount) => {
+    if (
+      imgRef.current &&
+      imgRef.current.complete &&
+      imgRef.current.naturalWidth > 0
+    ) {
       try {
-        const palette = getPaletteSync(imgRef.current, { colorCount: 5 });
-
-        if (palette) {
-          const hexColors = palette.map((color: any) => color.hex);
-          setColors(hexColors);
+        const palette = getPaletteSync(imgRef.current, { colorCount: count });
+        if (palette && palette.length > 0) {
+          const hexList = palette.map((color: Color) => color.hex());
+          setColors(hexList);
         }
       } catch (err) {
-        console.error("Image cross-origin or extraction error", err);
+        console.warn("Color extraction notice:", err);
       }
     }
   };
 
-  const copyToClipboard = (hex: string) => {
-    const tailwindClass = `bg-[${hex}]`;
-    navigator.clipboard.writeText(tailwindClass);
-    setCopied(tailwindClass);
-    setTimeout(() => setCopied(null), 2000);
+  const handleColorCountChange = (count: number) => {
+    setColorCount(count);
+    extractColors(count);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-indigo-400 space-y-4">
-        <Sparkles className="animate-ping" size={32} />
-        <p className="font-mono text-sm tracking-widest uppercase">
-          Establishing connection
-        </p>
-      </div>
+  useEffect(() => {
+    const dominant = colors[0] || "#6366f1";
+    document.documentElement.style.setProperty(
+      "--dominant-glow",
+      `${dominant}35`,
     );
-  }
+  }, [colors]);
 
-  if (data?.media_type !== "image") {
+  const copyValue = (value: string, label: string) => {
+    navigator.clipboard.writeText(value);
+    setCopiedItem(value);
+    setToastMessage(`Copied: ${label}`);
+    setTimeout(() => {
+      setCopiedItem(null);
+      setToastMessage(null);
+    }, 2200);
+  };
+
+  const cleanCredit =
+    data?.copyright || data?.credit
+      ? (data.copyright || data.credit || "").replace(/<[^>]*>/g, "").trim()
+      : null;
+
+  const exportAllTailwind = () => {
+    const classes = colors.map((c) => `bg-[${c}]`).join(" ");
+    copyValue(classes, "All Tailwind Classes");
+  };
+
+  const exportAllCssVars = () => {
+    const css = colors.map((c, i) => `  --cosmic-${i + 1}: ${c};`).join("\n");
+    copyValue(`:root {\n${css}\n}`, "CSS Custom Properties");
+  };
+
+  const exportAllJson = () => {
+    const json = JSON.stringify(colors, null, 2);
+    copyValue(json, "Palette JSON");
+  };
+
+  if (loading && !data) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-300 p-10 text-center">
-        <div className="">
-          <h2 className="text-2xl font-bold mb-2">Today's APOD is a Video</h2>
-          <p>
-            Color extraction requires a static image. Please check back
-            tomorrow! :D{" "}
-          </p>
+      <div className="cosmic-background">
+        <div className="cosmic-stars" />
+        <div className="loading-viewport">
+          <div className="loading-spinner-orb">
+            <Sparkles size={28} color="white" />
+          </div>
+          <p className="loading-text">Establishing Deep Space Telemetry...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-8 font-sans selection:bg-indigo-500/30">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-12 flex items-end justify-between border-b border-white/10 pb-6">
-          <h1>
-            <Sparkles className="text-indigo-400" />
-            Cosmic Palette
-          </h1>
-          <p className="text-slate-400 mt-2 font-medium">
-            NASA APOD Tailwind Gen
-          </p>
-        </header>
+    <>
+      <div className="cosmic-background">
+        <div className="cosmic-stars" />
+      </div>
 
-        {/* LEFT COLUMN - IMAGES AND DETAILS */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-7 space-y-6">
-            <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black relative group">
-              <img
-                ref={imgRef}
-                src={data.url}
-                alt={data.title}
-                crossOrigin="anonymous"
-                onLoad={extractColors}
-                className="w-full h-auto object-contain max h-[600px] bg-slate-900"
-              />
+      <div className="app-container">
+        <header className="app-header">
+          <div className="brand-wrapper">
+            <div className="brand-logo-icon">
+              <Sparkles size={24} />
             </div>
-            <div>
-              <h2 className="text-3xl font-semibold text-white mb-3 tracking-tight">
-                {data.title}
-              </h2>
-              <div className="bg-white/5 rounded-xl p-5 border border-white/5">
-                <p className="text-sm text-slate-300 leading-relaxed max-h-48 overflow-y-auto custom-scrollbar">
-                  {data.explanation}
-                </p>
-              </div>
+            <div className="">
+              <h1 className="brand-title">Cosmic Palette</h1>
+              <p className="brand-engine">NASA APOD Color & Tailwind Engine</p>
             </div>
           </div>
-        </div>
 
-        {/* RIGHT COLUMN PALETTE */}
-        <div className="lg:col-span-5 flex flex-col">
-          <h3 className="text-sm font-mono tracking-widest text-slate-400 uppercase mb-6 flex items-center gap-2">
-            <span className="w-8 h-px bg-slate-700">Extracted Swatches</span>
-          </h3>
+          <div className="apod-nav-controls">
+            <button
+              onClick={prevApod}
+              disabled={currentIndex === 0}
+              className="nav-arrow-btn"
+              title="Previous recent APOD"
+              aria-label="Previous APOD"
+            >
+              <ChevronLeft size={18} />
+            </button>
 
-          {colors.length === 0 ? (
-            <div className="animate-pulse space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-20 bg-white/5 rounded-xl border border-white/5"
-                ></div>
-              ))}
+            <div className="date-pill">
+              <span>{data?.date || "Today"}</span>
+              {currentIndex === 0 && (
+                <span className="badge-live">
+                  <span className="badge-live-dot" />
+                  Latest
+                </span>
+              )}
             </div>
-          ) : (
-            <div className="space-y-3">
-              {colors.map((hex, index) => (
-                <button
-                  key={index}
-                  onClick={() => copyToClipboard(hex)}
-                  className="w-full group relative flex items-center justify-between p-3 rounded-xl transition-all duration-300 hover:scale-[1.02] border border-white/5 hover:border-white/20 text-left"
-                  style={{ backgroundColor: `${hex}15` }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-14 h-14 rounded-lg shadow-inner border border-white/20 transition-transform group-hover:scale-105"
-                      style={{ backgroundColor: hex }}
-                    />
-                    <div>
-                      <p className="text-lg font-mono font-bold text-white uppercase tracking-wider">
-                        {hex}
-                      </p>
-                      <p className="text-xs text-slate-400 font-mono mt-1 opacity-80 group-hover:opacity-100">
-                        bg-[{hex}]
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="pr-4 text-slate-400 group-hover:text-white transition-colors">
-                    {copied === `bg-[${hex}]` ? (
-                      <span className="text-xs font-mono bg-white/10 px-3 py-1.5 rounded-md text-emerald-400">
-                        Copied
-                      </span>
-                    ) : (
-                      <Copy
-                        size={18}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+            <button
+              onClick={nextApod}
+              disabled={currentIndex >= totalItems - 1}
+              className="nav-arrow-btn"
+              title="Next recent APOD"
+              aria-label="Next-APOD"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </header>
 
-          {colors.length > 0 && (
-            <div className="mt-8 p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5">
-              <p className="text-xs text-indigo-300/80 leading-relaxed">
-                Click any swatch to copy it's arbitrary Tailwind class to your
-                clipboard :D
-              </p>
-            </div>
-          )}
-        </div>
+        {error && (
+          <div
+            className="glass-panel"
+            style={{
+              padding: "1rem 1.5rem",
+              borderColor: "rgba(239, 68, 68, 0.4)",
+            }}
+          >
+            <p style={{ color: "#f87171", fontSize: "0.9rem" }}>{error}</p>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
