@@ -36,7 +36,6 @@ Cosmic Palette is a web application that uses NASA's Astronomy Picture of the Da
 Cosmic Palette retrieves astronomical images and their associated information from NASA's Astronomy Picture of the Day resources.
 
 - **APOD website:** https://science.nasa.gov/apod/
-- **Image data endpoint:** `https://science.nasa.gov/wp-json/wp/v2/apod-basic?per_page=12`
 
 The application displays the latest available image by default and allows users to explore previous images when supported by the available data.
 
