@@ -4,7 +4,7 @@ export interface ApodData{
     title: string,
     url: string,
     explanation: string,
-    mediaType: string,
+    media_type: string,
     date: string
 }
 
@@ -13,12 +13,14 @@ export function useApod() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-
-        const apiKey = import.meta.env.VITE_NASA_API_KEY || "DEMO_KEY"
-        fetch(`https://api.nasa.gov/planetary/apod?api_key=${apiKey}`)
+        fetch(`https://science.nasa.gov/wp-json/wp/v2/apod-basic?per_page=1`)
         .then((res) => res.json())
-        .then((data) => {
-            setData(data);
+        .then((jsonArray) => {
+            setData(jsonArray[0]);
+            setLoading(false);
+        })
+        .catch((err) => {
+            console.error("Error fecthing the APOD:", err);
             setLoading(false);
         });
     }, []);
