@@ -11,7 +11,8 @@ import {
   ExternalLink,
   Code2,
   Palette,
-  Eye,
+  Globe2,
+  UserRound,
   SlidersHorizontal,
 } from "lucide-react";
 import { useApod } from "./hooks/useApod";
@@ -496,6 +497,42 @@ export default function App() {
             )}
           </div>
         </main>
+
+        <footer className="app-footer">
+          <span className="footer-credit">Developed by Camila Javiera</span>
+          <nav className="social-links" aria-label="Social links">
+            <a
+              href="https://www.linkedin.com/in/camila-javiera-navarro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link"
+              aria-label="Camila Javiera Navarro on LinkedIn"
+              title="LinkedIn"
+            >
+              <UserRound size={17} />
+            </a>
+            <a
+              href="https://github.com/camijavi/react-cosmic-palette.git"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link"
+              aria-label="Cosmic Palette on GitHub"
+              title="GitHub"
+            >
+              <Code2 size={17} />
+            </a>
+            <a
+              href="https://navarroweb.net/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link"
+              aria-label="Navarroweb website"
+              title="Navarroweb"
+            >
+              <Globe2 size={17} />
+            </a>
+          </nav>
+        </footer>
       </div>
 
       {/* Lightbox Modal */}
