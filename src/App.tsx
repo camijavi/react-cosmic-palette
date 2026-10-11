@@ -150,7 +150,7 @@ export default function App() {
         <header className="app-header">
           <div className="brand-wrapper">
             <div className="brand-logo-icon">
-              <Sparkles size={24} />
+              <Palette size={24} />
             </div>
             <div>
               <h1 className="brand-title">Cosmic Palette</h1>
