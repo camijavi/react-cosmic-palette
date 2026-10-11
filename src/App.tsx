@@ -126,6 +126,13 @@ export default function App() {
     );
   }
 
+  const cleanExplanation = data?.explanation
+    ? data.explanation
+        .replace(/<[^>]*>/g, "")
+        .replace(/^Explanation:\s*/i, "")
+        .trim()
+    : "";
+
   return (
     <>
       <div className="cosmic-background">
@@ -188,7 +195,332 @@ export default function App() {
             <p style={{ color: "#f87171", fontSize: "0.9rem" }}>{error}</p>
           </div>
         )}
+
+        <main className="main-grid">
+          <div className="hero-image-card glass-panel">
+            {data?.media_type === "image" ? (
+              <div
+                className="image-preview-viewport"
+                onClick={() => setIsLightboxOpen(true)}
+                title="Click to view fullscreen image"
+              >
+                <img
+                  src={data.hdurl || data.url}
+                  alt={data.title}
+                  ref={imgRef}
+                  crossOrigin="anonymous"
+                  onLoad={() => extractColors()}
+                  className="apod-hero-img"
+                />
+                <div className="image-overlay-actions">
+                  <button
+                    className="overlay-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsLightboxOpen(true);
+                    }}
+                  >
+                    <Maximize2 size={13} />
+                    Fullscreen
+                  </button>
+                  <a
+                    href={data.hdurl || data.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="overlay-btn"
+                    onClick={(e) => e.stopPropagation}
+                  >
+                    <ExternalLink size={13} />
+                    Original HD
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: "4rem 2rem",
+                  textAlign: "center",
+                  background: "rgba(0,0,0,0.3)",
+                }}
+              >
+                <Palette
+                  size={48}
+                  style={{
+                    color: "var(--accent-purple)",
+                    marginBottom: "1rem",
+                  }}
+                />
+                <h3 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>
+                  Today's APOD is a Video :0{" "}
+                </h3>
+                <p
+                  style={{
+                    color: "var(--text-secondary)",
+                    fontSize: "0.9rem",
+                    maxWidth: "420px",
+                    margin: "0 auto",
+                  }}
+                >
+                  {" "}
+                  Color extraction requieres a static photo. use the header
+                  arrows above to explore recent photographic APODs!
+                </p>
+              </div>
+            )}
+
+            <div className="image-meta-bar">
+              <div className="image-title-row">
+                <h2 className="image-title">{data?.title}</h2>
+              </div>
+
+              {cleanCredit && (
+                <div className="image-credit-tag">
+                  <span>Image Credit & Copyright:</span>
+                  <strong>{cleanCredit}</strong>
+                </div>
+              )}
+
+              {cleanExplanation && (
+                <div className="explanation-box">
+                  <p
+                    className={`explanation-text ${isExpanded ? "expanded" : ""}`}
+                  >
+                    {cleanExplanation}
+                  </p>
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="expand-toggle-btn"
+                  >
+                    {isExpanded ? "Show less" : "Read full description"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="palette-studio-card glass-panel">
+            <div className="studio-header">
+              <div className="studio-header-title">
+                <SlidersHorizontal size={20} color="var(--accent-cyan)" />
+                <span>Extracted Swatches</span>
+              </div>
+              <div className="count-selector-group">
+                {[5, 8, 10].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => handleColorCountChange(num)}
+                    className={`count-btn ${colorCount === num ? "active" : ""}`}
+                  >
+                    {num} Colors
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+            >
+              <span
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--text-muted)",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                {" "}
+                Default Format:
+              </span>
+              {(["tailwind", "hex", "rgb"] as const).map((fmt) => (
+                <button
+                  key={fmt}
+                  onClick={() => setActiveTab(fmt)}
+                  className={`count-btn ${activeTab === fmt ? "active" : ""}`}
+                  style={{ textTransform: "uppercase" }}
+                >
+                  {fmt}
+                </button>
+              ))}
+            </div>
+
+            <div className="swatches-grid">
+              {colors.length === 0 ? (
+                <div
+                  style={{
+                    padding: "2rem",
+                    textAlign: "center",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  <p style={{ fontSize: "0.9rem" }}>
+                    Extracting astronomical swatches...
+                  </p>
+                </div>
+              ) : (
+                colors.map((hex, index) => {
+                  const tailwindClass = `bg-[${hex}]`;
+                  const rgbValue = hexToRgb(hex);
+                  const isDark = isDakColor(hex);
+
+                  let primaryCopyValue = tailwindClass;
+                  if (activeTab === "hex") primaryCopyValue = hex;
+                  if (activeTab === "rgb") primaryCopyValue = rgbValue;
+
+                  return (
+                    <div
+                      className="swatc-card"
+                      key={index}
+                      onClick={() =>
+                        copyValue(primaryCopyValue, primaryCopyValue)
+                      }
+                      style={{
+                        background: `linear-gradient(90deg, ${hex}18 0%, rgba(15, 23, 42, 0.6) 100%)`,
+                        borderColor: `${hex}30`,
+                        cursor: "pointer",
+                      }}
+                      title={`Click to copy ${primaryCopyValue}`}
+                    >
+                      <div className="swatch-left">
+                        <div
+                          className="swatch-color-box"
+                          style={{
+                            backgroundColor: hex,
+                            boxShadow: `0 6px 18px -2px ${hex}60`,
+                          }}
+                        >
+                          <div className="swatch-details">
+                            <span className="swatch-hex">{hex}</span>
+                            <div className="swatch-tailwind-token">
+                              <span>{tailwindClass}</span>
+                              <span
+                                className="swatch-contrast-pill"
+                                style={{
+                                  backgroundColor: isDark
+                                    ? "rgba(255,255,255,0.12)"
+                                    : "rgba(0,0,0,0.5)",
+                                  color: isDark ? "#ffffff" : "#f1f5f9",
+                                }}
+                              >
+                                {isDark ? "Light Text" : "Dark Text"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className="swatch-actions"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() =>
+                              copyValue(tailwindClass, tailwindClass)
+                            }
+                            className={`action-chip-btn ${copiedItem === tailwindClass ? "copied" : ""}`}
+                            title="Copy Tailwind class"
+                          >
+                            {copiedItem === tailwindClass ? (
+                              <Check size={12} />
+                            ) : (
+                              <Copy size={12} />
+                            )}
+                            TW
+                          </button>
+
+                          <button
+                            onClick={() => copyValue(hex, hex)}
+                            className={`action-chip-btn ${copiedItem === hex ? "copied" : ""}`}
+                            title="Copy HEX code"
+                          >
+                            {copiedItem === hex ? (
+                              <Check size={12} />
+                            ) : (
+                              <Copy size={12} />
+                            )}
+                            HEX
+                          </button>
+
+                          <button
+                            onClick={() => copyValue(rgbValue, rgbValue)}
+                            className={`action-chip-btn ${copiedItem === rgbValue ? "copied" : ""}`}
+                            title="Copy RGB value"
+                          >
+                            {copiedItem === rgbValue ? (
+                              <Check size={12} />
+                            ) : (
+                              <Copy size={12} />
+                            )}
+                            RGB
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {colors.length > 0 && (
+              <div className="export-section">
+                <span className="export-section-title">
+                  Bulk Export Palette
+                </span>
+                <div className="export-buttons-row">
+                  <button onClick={exportAllTailwind} className="export-btn">
+                    <Code2 size={14} />
+                    Tailwind
+                  </button>
+                  <button onClick={exportAllCssVars} className="export-btn">
+                    <Code2 size={14} />
+                    Css Vars
+                  </button>
+                  <button onClick={exportAllJson} className="export-btn">
+                    <Code2 size={14} />
+                    JSON
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
+
+      {isLightboxOpen && data && (
+        <div
+          className="lightbox-backdrop"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation}>
+            <button
+              className="lightbox-close-btn"
+              onClick={() => setIsLightboxOpen(false)}
+              aria-label="Close fullscreen view"
+            >
+              <X size={20} />
+            </button>
+            <img
+              src={data.hdurl || data.url}
+              alt={data.title}
+              className="lightbox-img"
+            />
+            <p
+              style={{
+                marginTop: "1rem",
+                color: "#e2e8f0",
+                fontSize: "1rem",
+                fontWeight: 600,
+                textAlign: "center",
+              }}
+            >
+              {data.title} - {data.date}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {toastMessage && (
+        <div className="cosmic-toast">
+          <Check size={16} color="#34d399" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </>
   );
 }
