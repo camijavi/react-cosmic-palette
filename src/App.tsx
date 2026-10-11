@@ -25,7 +25,7 @@ function hexToRgb(hex: string): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function isDakColor(hex: string): boolean {
+function isDarkColor(hex: string): boolean {
   const clean = hex.replace("#", "");
   const num = parseInt(clean, 16);
   const r = (num >> 16) & 255;
@@ -74,6 +74,7 @@ export default function App() {
     extractColors(count);
   };
 
+  // Set ambient dynamic background glow
   useEffect(() => {
     const dominant = colors[0] || "#6366f1";
     document.documentElement.style.setProperty(
@@ -82,6 +83,7 @@ export default function App() {
     );
   }, [colors]);
 
+  // Copy helper
   const copyValue = (value: string, label: string) => {
     navigator.clipboard.writeText(value);
     setCopiedItem(value);
@@ -92,11 +94,21 @@ export default function App() {
     }, 2200);
   };
 
+  // Clean explanation text
+  const cleanExplanation = data?.explanation
+    ? data.explanation
+        .replace(/<[^>]*>/g, "")
+        .replace(/^Explanation:\s*/i, "")
+        .trim()
+    : "";
+
+  // Clean credit
   const cleanCredit =
     data?.copyright || data?.credit
       ? (data.copyright || data.credit || "").replace(/<[^>]*>/g, "").trim()
       : null;
 
+  // Export helpers
   const exportAllTailwind = () => {
     const classes = colors.map((c) => `bg-[${c}]`).join(" ");
     copyValue(classes, "All Tailwind Classes");
@@ -126,31 +138,27 @@ export default function App() {
     );
   }
 
-  const cleanExplanation = data?.explanation
-    ? data.explanation
-        .replace(/<[^>]*>/g, "")
-        .replace(/^Explanation:\s*/i, "")
-        .trim()
-    : "";
-
   return (
     <>
+      {/* Background Ambience */}
       <div className="cosmic-background">
         <div className="cosmic-stars" />
       </div>
 
       <div className="app-container">
+        {/* Header Bar */}
         <header className="app-header">
           <div className="brand-wrapper">
             <div className="brand-logo-icon">
               <Sparkles size={24} />
             </div>
-            <div className="">
+            <div>
               <h1 className="brand-title">Cosmic Palette</h1>
-              <p className="brand-engine">NASA APOD Color & Tailwind Engine</p>
+              <p className="brand-tagline">NASA APOD Color & Tailwind Engine</p>
             </div>
           </div>
 
+          {/* Navigation Controls */}
           <div className="apod-nav-controls">
             <button
               onClick={prevApod}
@@ -177,7 +185,7 @@ export default function App() {
               disabled={currentIndex >= totalItems - 1}
               className="nav-arrow-btn"
               title="Next recent APOD"
-              aria-label="Next-APOD"
+              aria-label="Next APOD"
             >
               <ChevronRight size={18} />
             </button>
@@ -196,7 +204,9 @@ export default function App() {
           </div>
         )}
 
+        {/* Main 2-Column Responsive Layout */}
         <main className="main-grid">
+          {/* LEFT: Featured Image & Information */}
           <div className="hero-image-card glass-panel">
             {data?.media_type === "image" ? (
               <div
@@ -205,13 +215,14 @@ export default function App() {
                 title="Click to view fullscreen image"
               >
                 <img
+                  ref={imgRef}
                   src={data.hdurl || data.url}
                   alt={data.title}
-                  ref={imgRef}
                   crossOrigin="anonymous"
                   onLoad={() => extractColors()}
                   className="apod-hero-img"
                 />
+
                 <div className="image-overlay-actions">
                   <button
                     className="overlay-btn"
@@ -228,7 +239,7 @@ export default function App() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="overlay-btn"
-                    onClick={(e) => e.stopPropagation}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <ExternalLink size={13} />
                     Original HD
@@ -251,7 +262,7 @@ export default function App() {
                   }}
                 />
                 <h3 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>
-                  Today's APOD is a Video :0{" "}
+                  Today's APOD is a Video
                 </h3>
                 <p
                   style={{
@@ -261,8 +272,7 @@ export default function App() {
                     margin: "0 auto",
                   }}
                 >
-                  {" "}
-                  Color extraction requieres a static photo. use the header
+                  Color extraction requires a static photo. Use the header
                   arrows above to explore recent photographic APODs!
                 </p>
               </div>
@@ -298,12 +308,15 @@ export default function App() {
             </div>
           </div>
 
+          {/* RIGHT: Cosmic Palette Studio */}
           <div className="palette-studio-card glass-panel">
             <div className="studio-header">
               <div className="studio-header-title">
                 <SlidersHorizontal size={20} color="var(--accent-cyan)" />
                 <span>Extracted Swatches</span>
               </div>
+
+              {/* Color Count Filter */}
               <div className="count-selector-group">
                 {[5, 8, 10].map((num) => (
                   <button
@@ -317,6 +330,7 @@ export default function App() {
               </div>
             </div>
 
+            {/* Quick format selector pills */}
             <div
               style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
             >
@@ -327,7 +341,6 @@ export default function App() {
                   fontFamily: "var(--font-mono)",
                 }}
               >
-                {" "}
                 Default Format:
               </span>
               {(["tailwind", "hex", "rgb"] as const).map((fmt) => (
@@ -342,6 +355,7 @@ export default function App() {
               ))}
             </div>
 
+            {/* Swatch Cards Grid */}
             <div className="swatches-grid">
               {colors.length === 0 ? (
                 <div
@@ -359,7 +373,7 @@ export default function App() {
                 colors.map((hex, index) => {
                   const tailwindClass = `bg-[${hex}]`;
                   const rgbValue = hexToRgb(hex);
-                  const isDark = isDakColor(hex);
+                  const isDark = isDarkColor(hex);
 
                   let primaryCopyValue = tailwindClass;
                   if (activeTab === "hex") primaryCopyValue = hex;
@@ -367,8 +381,8 @@ export default function App() {
 
                   return (
                     <div
-                      className="swatc-card"
                       key={index}
+                      className="swatch-card"
                       onClick={() =>
                         copyValue(primaryCopyValue, primaryCopyValue)
                       }
@@ -386,70 +400,71 @@ export default function App() {
                             backgroundColor: hex,
                             boxShadow: `0 6px 18px -2px ${hex}60`,
                           }}
-                        >
-                          <div className="swatch-details">
-                            <span className="swatch-hex">{hex}</span>
-                            <div className="swatch-tailwind-token">
-                              <span>{tailwindClass}</span>
-                              <span
-                                className="swatch-contrast-pill"
-                                style={{
-                                  backgroundColor: isDark
-                                    ? "rgba(255,255,255,0.12)"
-                                    : "rgba(0,0,0,0.5)",
-                                  color: isDark ? "#ffffff" : "#f1f5f9",
-                                }}
-                              >
-                                {isDark ? "Light Text" : "Dark Text"}
-                              </span>
-                            </div>
+                        />
+                        <div className="swatch-details">
+                          <span className="swatch-hex">{hex}</span>
+                          <div className="swatch-tailwind-token">
+                            <span>{tailwindClass}</span>
+                            <span
+                              className="swatch-contrast-pill"
+                              style={{
+                                backgroundColor: isDark
+                                  ? "rgba(255,255,255,0.12)"
+                                  : "rgba(0,0,0,0.5)",
+                                color: isDark ? "#ffffff" : "#f1f5f9",
+                              }}
+                            >
+                              {isDark ? "Light Text" : "Dark Text"}
+                            </span>
                           </div>
                         </div>
-                        <div
-                          className="swatch-actions"
-                          onClick={(e) => e.stopPropagation()}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div
+                        className="swatch-actions"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() =>
+                            copyValue(tailwindClass, tailwindClass)
+                          }
+                          className={`action-chip-btn ${copiedItem === tailwindClass ? "copied" : ""}`}
+                          title="Copy Tailwind class"
                         >
-                          <button
-                            onClick={() =>
-                              copyValue(tailwindClass, tailwindClass)
-                            }
-                            className={`action-chip-btn ${copiedItem === tailwindClass ? "copied" : ""}`}
-                            title="Copy Tailwind class"
-                          >
-                            {copiedItem === tailwindClass ? (
-                              <Check size={12} />
-                            ) : (
-                              <Copy size={12} />
-                            )}
-                            TW
-                          </button>
+                          {copiedItem === tailwindClass ? (
+                            <Check size={12} />
+                          ) : (
+                            <Copy size={12} />
+                          )}
+                          TW
+                        </button>
 
-                          <button
-                            onClick={() => copyValue(hex, hex)}
-                            className={`action-chip-btn ${copiedItem === hex ? "copied" : ""}`}
-                            title="Copy HEX code"
-                          >
-                            {copiedItem === hex ? (
-                              <Check size={12} />
-                            ) : (
-                              <Copy size={12} />
-                            )}
-                            HEX
-                          </button>
+                        <button
+                          onClick={() => copyValue(hex, hex)}
+                          className={`action-chip-btn ${copiedItem === hex ? "copied" : ""}`}
+                          title="Copy HEX code"
+                        >
+                          {copiedItem === hex ? (
+                            <Check size={12} />
+                          ) : (
+                            <Copy size={12} />
+                          )}
+                          HEX
+                        </button>
 
-                          <button
-                            onClick={() => copyValue(rgbValue, rgbValue)}
-                            className={`action-chip-btn ${copiedItem === rgbValue ? "copied" : ""}`}
-                            title="Copy RGB value"
-                          >
-                            {copiedItem === rgbValue ? (
-                              <Check size={12} />
-                            ) : (
-                              <Copy size={12} />
-                            )}
-                            RGB
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => copyValue(rgbValue, rgbValue)}
+                          className={`action-chip-btn ${copiedItem === rgbValue ? "copied" : ""}`}
+                          title="Copy RGB value"
+                        >
+                          {copiedItem === rgbValue ? (
+                            <Check size={12} />
+                          ) : (
+                            <Copy size={12} />
+                          )}
+                          RGB
+                        </button>
                       </div>
                     </div>
                   );
@@ -457,6 +472,7 @@ export default function App() {
               )}
             </div>
 
+            {/* Bulk Export Options */}
             {colors.length > 0 && (
               <div className="export-section">
                 <span className="export-section-title">
@@ -468,11 +484,11 @@ export default function App() {
                     Tailwind
                   </button>
                   <button onClick={exportAllCssVars} className="export-btn">
-                    <Code2 size={14} />
-                    Css Vars
+                    <Palette size={14} />
+                    CSS Vars
                   </button>
                   <button onClick={exportAllJson} className="export-btn">
-                    <Code2 size={14} />
+                    <Copy size={14} />
                     JSON
                   </button>
                 </div>
@@ -482,12 +498,16 @@ export default function App() {
         </main>
       </div>
 
+      {/* Lightbox Modal */}
       {isLightboxOpen && data && (
         <div
           className="lightbox-backdrop"
           onClick={() => setIsLightboxOpen(false)}
         >
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation}>
+          <div
+            className="lightbox-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="lightbox-close-btn"
               onClick={() => setIsLightboxOpen(false)}
@@ -509,12 +529,13 @@ export default function App() {
                 textAlign: "center",
               }}
             >
-              {data.title} - {data.date}
+              {data.title} — {data.date}
             </p>
           </div>
         </div>
       )}
 
+      {/* Copied Toast Notification */}
       {toastMessage && (
         <div className="cosmic-toast">
           <Check size={16} color="#34d399" />
