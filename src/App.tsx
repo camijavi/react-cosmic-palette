@@ -25,6 +25,16 @@ function hexToRgb(hex: string): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+function isDakColor(hex: string): boolean {
+  const clean = hex.replace("#", "");
+  const num = parseInt(clean, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness < 135;
+}
+
 export default function App() {
   const { data, loading } = useApod();
   const [colors, setColors] = useState<string[]>([]);
