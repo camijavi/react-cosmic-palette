@@ -1,7 +1,29 @@
 import { useState, useRef } from "react";
-import { getPaletteSync } from "colorthief";
-import { Copy, Sparkles } from "lucide-react";
+import { getPaletteSync, type Color } from "colorthief";
+import {
+  Sparkles,
+  Copy,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  X,
+  ExternalLink,
+  Code2,
+  Palette,
+  Eye,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useApod } from "./hooks/useApod";
+
+function hexToRgb(hex: string): string {
+  const clean = hex.replace("#", "");
+  const num = parseInt(clean, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgb(${r}, ${g}, ${b})`;
+}
 
 export default function App() {
   const { data, loading } = useApod();
