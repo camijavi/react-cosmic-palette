@@ -8,7 +8,7 @@ You can try out the application! No credentials needed!
 
 ## App's description
 
-Cosmic Palette is a simple web app that fetches NASA's Picture of the Day (APOD) and generates a 5-, 8-, or 10-color palette. You can generally choose which format you'd like to copy the colors in: Tailwind CSS, HEX, or RGB. Or choose individually—it's all up to you!
+Cosmic Palette is a simple web app that fetches NASA's Picture of the Day (APOD) and generates a 5-, 8-, or 10-color palette. You can generally choose which format you'd like to copy the colors in: Tailwind CSS, HEX, or RGB. Or choose individually, it's all up to you!
 
 You can also export all colors in Tailwind CSS, CSS variables, and JSON formats.
 
